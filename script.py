@@ -2,9 +2,14 @@ import requests
 from datetime import datetime, timedelta
 import pytz
 
+LOG_FILE = "execution.log"
+open(LOG_FILE, "a").close()
+
 def log_execution():
-    with open("execution.log", "a") as log_file:
-        log_file.write(f"Script executed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(f"📝 Script executed at {now}")
+    with open(LOG_FILE, "a") as log_file:
+        log_file.write(f"Script executed at {now}\n")
 
 # API endpoint
 API_URL = "https://cvs-data-public.s3.us-east-1.amazonaws.com/last-availability.json"
@@ -61,7 +66,6 @@ def get_minutes_difference(createdon_str, now):
     return int(delta.total_seconds() // 60)
 
 def fetch_f1_slots():
-    log_execution() 
     try:
         response = requests.get(API_URL, headers=HEADERS)
         if response.status_code != 200:
@@ -95,4 +99,6 @@ def fetch_f1_slots():
         print(f"Error fetching data: {e}")
 
 if __name__ == "__main__":
+    log_execution()
     fetch_f1_slots()
+    print("✅ Script finished.")
