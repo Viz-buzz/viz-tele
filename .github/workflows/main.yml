@@ -24,3 +24,10 @@ jobs:
 
       - name: Run script
         run: python script.py
+
+      - name: Upload execution log
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: execution-log
+          path: execution.log
