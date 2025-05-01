@@ -99,18 +99,6 @@ def fetch_f1_slots():
             readable_time = get_relative_time(slot['createdon'], now.strftime("%Y-%m-%d %H:%M:%S"))
             print(f"{slot['visa_location']} - Created {readable_time}")
 
-            # Print each slot with the formatted details
-            print(f'''
-                    "visa_location": "{slot['visa_location']}",
-                    "visa_type": "{slot['visa_type']}",
-                    "createdon": "{slot['createdon']}",
-                    "no_of_dates": {slot['no_of_dates']},
-                    "no_of_apnts": {slot['no_of_apnts']},
-                    "earliest_date": "{slot['earliest_date']}"
-                    --> {readable_time}
-            ''')
-
-            # Check if the slot was created within 5 minutes
             if minutes_diff <= 5:
                 message = f"🚨 New F-1 (Regular) slot available!\nLocation: {slot['visa_location']}\nEarliest Date: {slot['earliest_date']}\nCreated {readable_time} ago."
                 send_telegram_message(message)
