@@ -19,7 +19,7 @@ HEADERS = {
 }
 
 BOT_TOKEN = '7254731409:AAGeEsyLi9x4EYdiRA3GuBK_G3fSo79L9Do'
-CHAT_IDs = ['1624851640', '7632912613']  # List of chat IDs
+CHAT_IDs = ['1624851640', '7632912613', '1764669281']  # List of chat IDs
 
 def send_telegram_message(message):
     url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
