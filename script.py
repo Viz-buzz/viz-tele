@@ -74,22 +74,28 @@ def fetch_f1_slots():
         f1_slots = data.get('result', {}).get('F-1 (Regular)', [])
         now = datetime.now(pytz.timezone('Asia/Kolkata'))
 
-        any_new_slot = False
+        # Collect new slots within 3 minutes
+        new_slots = []
+        chennai_found = False
+
         for slot in f1_slots:
             if slot['visa_location'] not in ("CHENNAI VAC", "CHENNAI"):
                 continue
 
             minutes_diff = get_minutes_difference(slot['createdon'], now)
-            readable_time = get_relative_time(slot['createdon'], now.strftime("%Y-%m-%d %H:%M:%S"))
-
-            # Only send message if the slot was created within the last 3 minutes
             if minutes_diff <= 3:
-                if not any_new_slot:
-                    separator = "---------------------\n🎯 New Slot Batch\n---------------------"
-                    print(separator)
-                    send_telegram_message(separator)
-                    any_new_slot = True
+                new_slots.append(slot)
+                if slot['visa_location'] == "CHENNAI":
+                    chennai_found = True
 
+        # Only proceed to send if at least one CHENNAI slot is found
+        if chennai_found and new_slots:
+            separator = "---------------------\n🎯 New Slot Batch\n---------------------"
+            print(separator)
+            send_telegram_message(separator)
+
+            for slot in new_slots:
+                readable_time = get_relative_time(slot['createdon'], now.strftime("%Y-%m-%d %H:%M:%S"))
                 message = (
                     f"🚨 New F-1 (Regular) slot available!\n"
                     f"Location: {slot['visa_location']}\n"
@@ -98,6 +104,8 @@ def fetch_f1_slots():
                     f"Created {readable_time}."
                 )
                 send_telegram_message(message)
+        else:
+            print("ℹ️ No recent CHENNAI slot found; no messages sent.")
 
     except requests.exceptions.RequestException as e:
         print(f"Error fetching data: {e}")
