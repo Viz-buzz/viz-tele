@@ -11,10 +11,8 @@ def log_execution():
     with open(LOG_FILE, "a") as log_file:
         log_file.write(f"Script executed at {now}\n")
 
-# API endpoint
 API_URL = "https://cvs-data-public.s3.us-east-1.amazonaws.com/last-availability.json"
 
-# Headers to avoid 403 Forbidden error
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
     'Referer': 'https://checkvisaslots.com',
@@ -22,7 +20,7 @@ HEADERS = {
 }
 
 BOT_TOKEN = '7254731409:AAGeEsyLi9x4EYdiRA3GuBK_G3fSo79L9Do'
-CHAT_IDs = ['1624851640', '7632912613', '1764669281']  # List of chat IDs
+CHAT_IDs = ['1624851640', '7632912613', '1764669281']
 
 def send_telegram_message(message):
     url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
@@ -76,16 +74,22 @@ def fetch_f1_slots():
         f1_slots = data.get('result', {}).get('F-1 (Regular)', [])
         now = datetime.now(pytz.timezone('Asia/Kolkata'))
 
+        any_new_slot = False
         for slot in f1_slots:
-            # Only consider Chennai locations
             if slot['visa_location'] not in ("CHENNAI VAC", "CHENNAI"):
                 continue
 
             minutes_diff = get_minutes_difference(slot['createdon'], now)
             readable_time = get_relative_time(slot['createdon'], now.strftime("%Y-%m-%d %H:%M:%S"))
 
-            # Only send message if the slot was created within the last 5 minutes
-            if minutes_diff <= 5:
+            # Only send message if the slot was created within the last 3 minutes
+            if minutes_diff <= 3:
+                if not any_new_slot:
+                    separator = "---------------------\n🎯 New Slot Batch\n---------------------"
+                    print(separator)
+                    send_telegram_message(separator)
+                    any_new_slot = True
+
                 message = (
                     f"🚨 New F-1 (Regular) slot available!\n"
                     f"Location: {slot['visa_location']}\n"
