@@ -6,8 +6,6 @@ def log_execution():
     with open("execution.log", "a") as log_file:
         log_file.write(f"Script executed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
-
-
 # API endpoint
 API_URL = "https://cvs-data-public.s3.us-east-1.amazonaws.com/last-availability.json"
 
