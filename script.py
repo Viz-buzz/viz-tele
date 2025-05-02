@@ -2,14 +2,9 @@ import requests
 from datetime import datetime, timedelta
 import pytz
 
-LOG_FILE = "execution.log"
-open(LOG_FILE, "a").close()
-
 def log_execution():
     now = datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%Y-%m-%d %H:%M:%S')
     print(f"📝 Script executed at {now}")
-    with open(LOG_FILE, "a") as log_file:
-        log_file.write(f"Script executed at {now}\n")
 
 API_URL = "https://cvs-data-public.s3.us-east-1.amazonaws.com/last-availability.json"
 
@@ -23,7 +18,6 @@ BOT_TOKEN = '7254731409:AAGeEsyLi9x4EYdiRA3GuBK_G3fSo79L9Do'
 CHAT_IDs = ['1624851640', '7632912613', '1764669281']
 
 def send_telegram_message(message):
-    print(f"📤 Sending message to Telegram: {message}")
     url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
     for chat_id in CHAT_IDs:
         payload = {
@@ -32,7 +26,6 @@ def send_telegram_message(message):
         }
         try:
             response = requests.post(url, data=payload)
-            print(f"📨 Sent to {chat_id}, status code: {response.status_code}")
             if response.status_code != 200:
                 print(f"❌ Failed to send message to chat ID {chat_id}. Status Code: {response.status_code}")
         except requests.exceptions.RequestException as e:
@@ -64,21 +57,17 @@ def get_minutes_difference(createdon_str, now):
     adjusted_time = created_time + timedelta(hours=5, minutes=30)
     delta = now - adjusted_time
     minutes = int(delta.total_seconds() // 60)
-    print(f"⏱️ Minutes difference for slot created at {createdon_str}: {minutes} minutes")
     return minutes
 
 def fetch_f1_slots():
-    print("📡 Fetching data from API...")
     try:
         response = requests.get(API_URL, headers=HEADERS)
-        print(f"🌐 API Response Code: {response.status_code}")
         if response.status_code != 200:
             print(f"❌ Failed to fetch data. Status Code: {response.status_code}")
             return
 
         data = response.json()
         f1_slots = data.get('result', {}).get('F-1 (Regular)', [])
-        print(f"📦 F-1 slots fetched: {len(f1_slots)} entries")
         now = datetime.now(pytz.timezone('Asia/Kolkata'))
 
         new_slots = []
@@ -86,23 +75,18 @@ def fetch_f1_slots():
         recent_locations = set()
 
         for slot in f1_slots:
-            print(f"🔍 Checking slot: {slot}")
             minutes_diff = get_minutes_difference(slot['createdon'], now)
             if minutes_diff > 2:
-                print("⏭️ Slot skipped (older than 2 minutes)")
                 continue
 
             print(f"✅ Slot is recent. Location: {slot['visa_location']}")
             if slot['visa_location'] in ("CHENNAI", "CHENNAI VAC"):
                 new_slots.append(slot)
-                print("📌 CHENNAI slot added.")
                 if slot['visa_location'] == "CHENNAI":
                     chennai_found = True
             else:
                 recent_locations.add(slot['visa_location'])
-
-        print(f"🎯 Chennai found: {chennai_found}, Total CHENNAI/CHENNAI VAC slots: {len(new_slots)}")
-
+                
         if chennai_found and new_slots:
             separator = "---------------------\n🎯 New Slot Batch\n---------------------"
             print(separator)
