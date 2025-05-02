@@ -33,6 +33,8 @@ def send_telegram_message(message):
             response = requests.post(url, data=payload)
             if response.status_code != 200:
                 print(f"❌ Failed to send message to chat ID {chat_id}. Status Code: {response.status_code}")
+            else:
+                print(f"✅ Message sent to chat ID {chat_id}")
         except requests.exceptions.RequestException as e:
             print(f"❌ Error sending message to chat ID {chat_id}: {e}")
 
@@ -62,6 +64,7 @@ def get_minutes_difference(createdon_str, now):
     return int(delta.total_seconds() // 60)
 
 def fetch_f1_slots():
+    print("📡 Fetching slot data...")
     try:
         response = requests.get(API_URL, headers=HEADERS)
         if response.status_code != 200:
@@ -70,21 +73,29 @@ def fetch_f1_slots():
 
         data = response.json()
         f1_slots = data.get('result', {}).get('F-1 (Regular)', [])
-        now = datetime.now(pytz.timezone('Asia/Kolkata'))
+        print(f"📦 Total F-1 slots fetched: {len(f1_slots)}")
 
+        now = datetime.now(pytz.timezone('Asia/Kolkata'))
         new_slots = []
         chennai_found = False
         recent_locations = set()
 
         for slot in f1_slots:
-            location = slot.get('visa_location', '').strip().upper()
+            location_raw = slot.get('visa_location', '').strip()
+            location = location_raw.upper()
             minutes_diff = get_minutes_difference(slot['createdon'], now)
+            print(f"🕒 Slot at {location_raw} was updated {minutes_diff} min ago.")
 
             if minutes_diff <= 3:
-                recent_locations.add(location)
+                print(f"✅ Recent slot found at: {location_raw}")
+                recent_locations.add(location_raw)
                 if "CHENNAI" in location:
+                    print("🎯 Chennai match found.")
                     new_slots.append(slot)
                     chennai_found = True
+
+        print(f"🎯 Chennai found: {chennai_found}")
+        print(f"📍 Recent locations: {recent_locations}")
 
         if chennai_found and new_slots:
             separator = "---------------------\n🎯 New Slot Batch\n---------------------"
@@ -100,6 +111,7 @@ def fetch_f1_slots():
                     f"No of Appointments: {slot['no_of_apnts']}\n"
                     f"Created {readable_time}."
                 )
+                print(f"📤 Sending message for slot: {slot['visa_location']}")
                 send_telegram_message(message)
         else:
             if recent_locations:
