@@ -88,8 +88,8 @@ def fetch_f1_slots():
         for slot in f1_slots:
             print(f"🔍 Checking slot: {slot}")
             minutes_diff = get_minutes_difference(slot['createdon'], now)
-            if minutes_diff > 3:
-                print("⏭️ Slot skipped (older than 3 minutes)")
+            if minutes_diff > 2:
+                print("⏭️ Slot skipped (older than 2 minutes)")
                 continue
 
             print(f"✅ Slot is recent. Location: {slot['visa_location']}")
@@ -122,7 +122,7 @@ def fetch_f1_slots():
             print("ℹ️ No CHENNAI slots found.")
             if recent_locations:
                 locations_str = ', '.join(sorted(recent_locations))
-                print(f"🗺️ Recent Locations within 3 minutes: {locations_str}")
+                print(f"🗺️ Recent Locations within 2 minutes: {locations_str}")
 
     except requests.exceptions.RequestException as e:
         print(f"❌ Error fetching data: {e}")
