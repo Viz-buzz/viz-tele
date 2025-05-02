@@ -6,7 +6,7 @@ LOG_FILE = "execution.log"
 open(LOG_FILE, "a").close()
 
 def log_execution():
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    now = datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%Y-%m-%d %H:%M:%S')
     print(f"📝 Script executed at {now}")
     with open(LOG_FILE, "a") as log_file:
         log_file.write(f"Script executed at {now}\n")
@@ -74,21 +74,22 @@ def fetch_f1_slots():
         f1_slots = data.get('result', {}).get('F-1 (Regular)', [])
         now = datetime.now(pytz.timezone('Asia/Kolkata'))
 
-        # Collect new slots within 3 minutes
         new_slots = []
         chennai_found = False
+        recent_locations = set()
 
         for slot in f1_slots:
-            if slot['visa_location'] not in ("CHENNAI VAC", "CHENNAI"):
+            minutes_diff = get_minutes_difference(slot['createdon'], now)
+            if minutes_diff > 3:
                 continue
 
-            minutes_diff = get_minutes_difference(slot['createdon'], now)
-            if minutes_diff <= 3:
+            if slot['visa_location'] in ("CHENNAI", "CHENNAI VAC"):
                 new_slots.append(slot)
                 if slot['visa_location'] == "CHENNAI":
                     chennai_found = True
+            else:
+                recent_locations.add(slot['visa_location'])
 
-        # Only proceed to send if at least one CHENNAI slot is found
         if chennai_found and new_slots:
             separator = "---------------------\n🎯 New Slot Batch\n---------------------"
             print(separator)
@@ -105,7 +106,10 @@ def fetch_f1_slots():
                 )
                 send_telegram_message(message)
         else:
-            print("ℹ️ No recent CHENNAI slot found; no messages sent.")
+            print("ℹ️ No CHENNAI slots found.")
+            if recent_locations:
+                locations_str = ', '.join(sorted(recent_locations))
+                print(f"🗺️ Recent Locations within 3 minutes: {locations_str}")
 
     except requests.exceptions.RequestException as e:
         print(f"Error fetching data: {e}")
