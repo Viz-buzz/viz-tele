@@ -88,7 +88,7 @@ def fetch_f1_slots():
         for slot in f1_slots:
             print(f"🔍 Checking slot: {slot}")
             minutes_diff = get_minutes_difference(slot['createdon'], now)
-            if minutes_diff > 3:
+            if minutes_diff > 2:
                 print("⏭️ Slot skipped (older than 3 minutes)")
                 continue
 
