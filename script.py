@@ -14,7 +14,7 @@ def log_execution():
 API_URL = "https://cvs-data-public.s3.us-east-1.amazonaws.com/last-availability.json"
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'User-Agent': 'Mozilla/5.0',
     'Referer': 'https://checkvisaslots.com',
     'Accept-Language': 'en-US,en;q=0.9'
 }
@@ -32,16 +32,15 @@ def send_telegram_message(message):
         try:
             response = requests.post(url, data=payload)
             if response.status_code != 200:
-                print(f"Failed to send message to chat ID {chat_id}. Status Code: {response.status_code}")
+                print(f"❌ Failed to send message to chat ID {chat_id}. Status Code: {response.status_code}")
         except requests.exceptions.RequestException as e:
-            print(f"Error sending message to chat ID {chat_id}: {e}")
+            print(f"❌ Error sending message to chat ID {chat_id}: {e}")
 
 def get_relative_time(createdon_str, now_str=None):
     tz = pytz.timezone('Asia/Kolkata')
     created_time = tz.localize(datetime.strptime(createdon_str, "%Y-%m-%d %H:%M:%S"))
-    adjusted_time = created_time + timedelta(hours=5, minutes=30)
     now = tz.localize(datetime.strptime(now_str, "%Y-%m-%d %H:%M:%S")) if now_str else datetime.now(tz)
-    delta = now - adjusted_time
+    delta = now - created_time
     total_seconds = int(delta.total_seconds())
     minutes = total_seconds // 60
     hours = minutes // 60
@@ -59,15 +58,14 @@ def get_relative_time(createdon_str, now_str=None):
 def get_minutes_difference(createdon_str, now):
     tz = pytz.timezone('Asia/Kolkata')
     created_time = tz.localize(datetime.strptime(createdon_str, "%Y-%m-%d %H:%M:%S"))
-    adjusted_time = created_time + timedelta(hours=5, minutes=30)
-    delta = now - adjusted_time
+    delta = now - created_time
     return int(delta.total_seconds() // 60)
 
 def fetch_f1_slots():
     try:
         response = requests.get(API_URL, headers=HEADERS)
         if response.status_code != 200:
-            print(f"Failed to fetch data. Status Code: {response.status_code}")
+            print(f"❌ Failed to fetch data. Status Code: {response.status_code}")
             return
 
         data = response.json()
@@ -79,16 +77,14 @@ def fetch_f1_slots():
         recent_locations = set()
 
         for slot in f1_slots:
+            location = slot.get('visa_location', '').strip().upper()
             minutes_diff = get_minutes_difference(slot['createdon'], now)
-            if minutes_diff > 3:
-                continue
 
-            if slot['visa_location'] in ("CHENNAI", "CHENNAI VAC"):
-                new_slots.append(slot)
-                if slot['visa_location'] == "CHENNAI":
+            if minutes_diff <= 3:
+                recent_locations.add(location)
+                if "CHENNAI" in location:
+                    new_slots.append(slot)
                     chennai_found = True
-            else:
-                recent_locations.add(slot['visa_location'])
 
         if chennai_found and new_slots:
             separator = "---------------------\n🎯 New Slot Batch\n---------------------"
@@ -106,13 +102,16 @@ def fetch_f1_slots():
                 )
                 send_telegram_message(message)
         else:
-            print("ℹ️ No CHENNAI slots found.")
             if recent_locations:
                 locations_str = ', '.join(sorted(recent_locations))
-                print(f"🗺️ Recent Locations within 3 minutes: {locations_str}")
+                info_message = f"⚠️ No recent CHENNAI slot found.\nOther recent locations: {locations_str}"
+                print(info_message)
+                send_telegram_message(info_message)
+            else:
+                print("ℹ️ No recent F-1 (Regular) slots found at all.")
 
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching data: {e}")
+        print(f"❌ Error fetching data: {e}")
 
 if __name__ == "__main__":
     log_execution()
