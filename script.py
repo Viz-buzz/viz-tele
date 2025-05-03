@@ -2,14 +2,9 @@ import requests
 from datetime import datetime, timedelta
 import pytz
 
-LOG_FILE = "execution.log"
-open(LOG_FILE, "a").close()
-
 def log_execution():
     now = datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%Y-%m-%d %H:%M:%S')
     print(f"📝 Script executed at {now}")
-    with open(LOG_FILE, "a") as log_file:
-        log_file.write(f"Script executed at {now}\n")
 
 API_URL = "https://cvs-data-public.s3.us-east-1.amazonaws.com/last-availability.json"
 
