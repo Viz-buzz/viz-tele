@@ -91,8 +91,8 @@ def fetch_f1_slots():
             if slot['visa_location'] in ("CHENNAI", "CHENNAI VAC"):
                 new_slots.append(slot)
                 print("📌 CHENNAI slot added.")
-                if slot['visa_location'] == "CHENNAI":
-                    chennai_found = True
+                # if slot['visa_location'] == "CHENNAI":
+                chennai_found = True
             else:
                 recent_locations.add(slot['visa_location'])
 
