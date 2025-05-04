@@ -15,7 +15,7 @@ HEADERS = {
 }
 
 BOT_TOKEN = '7254731409:AAGeEsyLi9x4EYdiRA3GuBK_G3fSo79L9Do'
-CHAT_IDs = ['1624851640', '7632912613', '1764669281']
+CHAT_IDs = ['7632912613', '1764669281']
 
 def send_telegram_message(message):
     print(f"📤 Sending message to Telegram: {message}")
@@ -91,8 +91,8 @@ def fetch_f1_slots():
             if slot['visa_location'] in ("CHENNAI", "CHENNAI VAC"):
                 new_slots.append(slot)
                 print("📌 CHENNAI slot added.")
-                # if slot['visa_location'] == "CHENNAI":
-                chennai_found = True
+                if slot['visa_location'] == "CHENNAI":
+                    chennai_found = True
             else:
                 recent_locations.add(slot['visa_location'])
 
