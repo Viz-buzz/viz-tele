@@ -15,7 +15,7 @@ HEADERS = {
 }
 
 BOT_TOKEN = '7254731409:AAGeEsyLi9x4EYdiRA3GuBK_G3fSo79L9Do'
-CHAT_IDs = ['7632912613', '1764669281']
+CHAT_IDs = ['7632912613']
 
 def send_telegram_message(message):
     print(f"📤 Sending message to Telegram: {message}")
